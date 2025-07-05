@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Video Upscaler HD</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=YOUR_ADSENSE_ID"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'YOUR_ADSENSE_ID');
+  </script>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    .drop-zone { border: 2px dashed #aaa; padding: 2rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>Upscale Your Video to HD</h1>
+  <div class="drop-zone">
+    <input type="file" id="videoInput" accept="video/*">
+    <button onclick="uploadVideo()">Upload & Convert</button>
+  </div>
+  <div id="result"></div>
+
+  <!-- AdSense example placement -->
+  <div style="margin-top: 2rem;">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-xxxxxxxxxxxxxxxx"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+
+  <script>
+    async function uploadVideo() {
+      const fileInput = document.getElementById("videoInput");
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("http://YOUR_BACKEND_DOMAIN/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      document.getElementById("result").innerHTML = `
+        <p>Download your HD video:</p>
+        <a href="${data.download_url}" target="_blank">Click Here</a>
+      `;
+    }
+  </script>
+</body>
+</html>
