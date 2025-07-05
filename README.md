@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Online Video Enhancer
 
 A modern, full-stack web application for AI-powered video upscaling and enhancement. Transform your videos to HD, 2K, or 4K quality with an intuitive drag-and-drop interface.
@@ -280,3 +281,6 @@ If you encounter any issues:
 ---
 
 **Built with ❤️ using FastAPI, Next.js, and FFmpeg** 
+=======
+# gold-star-evolution-enhancer
+>>>>>>> bc6d7467c1845aba7586eb7e124d6a06097c0d2c
