@@ -22,11 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve static files from the videos directory
-app.mount("/videos", StaticFiles(directory="videos"), name="videos")
-
 if not os.path.exists("videos"):
     os.makedirs("videos")
+
+# Serve static files from the videos directory
+app.mount("/videos", StaticFiles(directory="videos"), name="videos")
 
 def analyze_video(input_path: str) -> dict:
     """Analyze video file and return metadata"""
