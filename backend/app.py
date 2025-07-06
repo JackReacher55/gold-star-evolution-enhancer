@@ -1,9 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, UploadFile, File, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import uuid
 import shutil
+import subprocess
+import logging
 
 app = FastAPI()
 
@@ -58,4 +60,81 @@ def download(job_id: str):
     job = jobs.get(job_id)
     if not job or not os.path.exists(job["output"]):
         return JSONResponse(status_code=404, content={"error": "Result not ready"})
-    return FileResponse(job["output"], media_type="video/mp4", filename=f"{job_id}_upscaled.mp4") 
+    return FileResponse(job["output"], media_type="video/mp4", filename=f"{job_id}_upscaled.mp4")
+
+@app.post("/fix-audio")
+async def fix_audio_endpoint(file: UploadFile = File(...)):
+    """Fix video by adding silent audio track if missing"""
+
+    if not file.content_type.startswith('video/'):
+        raise HTTPException(status_code=400, detail="File must be a video")
+
+    uid = str(uuid.uuid4())
+    input_path = f"videos/{uid}_{file.filename}"
+    output_path = f"videos/{uid}_audiofixed.mp4"
+
+    try:
+        # Save uploaded file
+        with open(input_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        # Analyze video
+        # Placeholder for analyze_video function
+        def analyze_video(path):
+            # In a real application, this would use a library like moviepy
+            # For now, it just returns a dummy analysis
+            return {"has_audio": False, "duration": 0, "fps": 0}
+
+        analysis = analyze_video(input_path)
+
+        # If video already has audio, just copy it
+        if analysis.get('has_audio'):
+            cmd = [
+                "ffmpeg",
+                "-i", input_path,
+                "-c", "copy",  # Copy streams without re-encoding
+                "-y",
+                output_path
+            ]
+        else:
+            # Add silent audio track
+            cmd = [
+                "ffmpeg",
+                "-i", input_path,
+                "-f", "lavfi",
+                "-i", "anullsrc=channel_layout=stereo:sample_rate=44100",
+                "-shortest",
+                "-c:v", "copy",  # Copy video stream
+                "-c:a", "aac",
+                "-b:a", "128k",
+                "-y",
+                output_path
+            ]
+
+        # Placeholder for logger
+        logger = logging.getLogger(__name__)
+        logger.info(f"Running audio fix command: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            logger.error(f"FFmpeg error: {result.stderr}")
+            raise HTTPException(status_code=500, detail="Failed to fix audio")
+
+        # Clean up input file
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+        return {
+            "download_url": f"/videos/{uid}_audiofixed.mp4",
+            "analysis": analysis,
+            "file_id": uid
+        }
+
+    except Exception as e:
+        # Clean up files on error
+        for path in [input_path, output_path]:
+            if os.path.exists(path):
+                os.remove(path)
+        logger.error(f"Error fixing audio: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error") 
