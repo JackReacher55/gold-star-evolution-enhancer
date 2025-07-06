@@ -33,8 +33,6 @@ export default function Home() {
       setAudioFixUrl('');
       setAlert('');
       setProgress(0);
-      
-      // Create video preview
       const url = URL.createObjectURL(selectedFile);
       setVideoPreview(url);
     }
@@ -50,7 +48,6 @@ export default function Home() {
       setAudioFixUrl('');
       setAlert('');
       setProgress(0);
-      
       const url = URL.createObjectURL(droppedFile);
       setVideoPreview(url);
     }
@@ -62,17 +59,15 @@ export default function Home() {
 
   const handleUpload = async () => {
     if (!file) return;
-    
     setUploading(true);
     setAlert('');
     setProgress(0);
-    
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('resolution', selectedResolution);
 
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) {
@@ -96,7 +91,7 @@ export default function Home() {
       setProgress(100);
       setDownloadUrl(data.download_url);
       setAudioAnalysis(data.analysis);
-      
+
       if (data.analysis) {
         if (!data.analysis.has_audio) {
           setAlert('No audio detected. You can fix this by adding a silent track.');
@@ -104,41 +99,11 @@ export default function Home() {
           setAlert(`Audio detected: ${data.analysis.audio_codec}`);
         }
       }
-      
+
       clearInterval(progressInterval);
     } catch (error) {
       setAlert('Error uploading video. Please try again.');
       console.error('Upload error:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFixAudio = async () => {
-    if (!file) return;
-    
-    setUploading(true);
-    setAlert('');
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      const res = await fetch(`${API_BASE_URL}/fix-audio`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!res.ok) {
-        throw new Error('Audio fix failed');
-      }
-      
-      const data = await res.json();
-      setAudioFixUrl(data.download_url);
-      setAlert('Audio fixed successfully! Download the new video below.');
-    } catch (error) {
-      setAlert('Error fixing audio. Please try again.');
-      console.error('Audio fix error:', error);
     } finally {
       setUploading(false);
     }
@@ -168,6 +133,31 @@ export default function Home() {
       console.error('Audio analysis error:', error);
     } finally {
       setAnalyzingAudio(false);
+    }
+  };
+
+  const handleFixAudio = async () => {
+    if (!file) return;
+    setUploading(true);
+    setAlert('');
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+      const res = await fetch(`${API_BASE_URL}/fix-audio`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error('Audio fix failed');
+      }
+      const data = await res.json();
+      setAudioFixUrl(data.download_url);
+      setAlert('Audio fixed successfully! Download the new video below.');
+    } catch (error) {
+      setAlert('Error fixing audio. Please try again.');
+      console.error('Audio fix error:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
