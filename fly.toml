@@ -1,0 +1,28 @@
+app = "gold-star-evolution-enhancer-backend"
+
+[build]
+  image = "python:3.11"
+
+[env]
+  PORT = "8080"
+  PYTHONPATH = "/app"
+  CORS_ORIGINS = "*"
+  MAX_FILE_SIZE = "100MB"
+
+[deploy]
+  strategy = "immediate"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+[build.args]
+  BUILDKIT_INLINE_CACHE = "1" 

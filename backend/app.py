@@ -70,20 +70,33 @@ def get_temp_dir() -> str:
 async def upscale_video_endpoint(
     request: Request,
     file: UploadFile = File(...),
-    resolution: str = Form("2")  # Real-ESRGAN scale (e.g., 2, 4)
+    resolution: str = Form("1920:1080")  # Frontend sends resolution like "1920:1080"
 ):
     """Upload and upscale video to specified resolution using Real-ESRGAN"""
     # Validate file type
     if not file.content_type.startswith('video/'):
         raise HTTPException(status_code=400, detail="File must be a video")
 
-    # Validate scale (should be 2, 4, etc.)
+    # Convert resolution to scale factor
     try:
-        scale = int(resolution)
-        if scale not in [2, 4]:
-            raise ValueError("Invalid scale")
+        if ":" in resolution:
+            width, height = map(int, resolution.split(":"))
+            # Determine scale based on target resolution
+            if width >= 3840 or height >= 2160:  # 4K
+                scale = "4"
+            elif width >= 2560 or height >= 1440:  # 2K
+                scale = "3"
+            elif width >= 1920 or height >= 1080:  # 1080p
+                scale = "2"
+            else:  # 720p or lower
+                scale = "2"
+        else:
+            # Fallback to direct scale value
+            scale = resolution
+            if scale not in ["2", "3", "4"]:
+                scale = "2"
     except:
-        raise HTTPException(status_code=400, detail="Invalid scale. Use 2 or 4.")
+        scale = "2"  # Default to 2x upscaling
 
     uid = str(uuid.uuid4())
     temp_dir = get_temp_dir()
@@ -109,20 +122,25 @@ async def upscale_video_endpoint(
         # Analyze video
         analysis = analyze_video(input_path)
         logger.info(f"Video analysis: {analysis}")
+        
         # Upscale video using Real-ESRGAN
-        success = upscale_with_realesrgan(input_path, output_path, str(scale))
+        success = upscale_with_realesrgan(input_path, output_path, scale)
         if not success:
             raise HTTPException(status_code=500, detail="Failed to process video with Real-ESRGAN")
+        
         # Clean up input file
         if os.path.exists(input_path):
             os.remove(input_path)
+        
         # Build full download URL
         base_url = get_base_url(request)
         download_url = f"{base_url}/videos/{uid}_upscaled.mp4"
+        
         return {
             "download_url": download_url,
             "analysis": analysis,
-            "resolution": f"{scale}x",
+            "resolution": resolution,
+            "scale": scale,
             "file_id": uid
         }
     except HTTPException as he:

@@ -1,233 +1,192 @@
-# 🚀 Deployment Guide - Online Video Enhancer
+# 🚀 Deployment Guide
 
-This guide will help you deploy your Online Video Enhancer to the internet with a custom domain name.
+This guide covers automated deployment to GitHub, Vercel (frontend), and Render (backend).
 
 ## 📋 Prerequisites
 
-- GitHub account
-- Domain name (optional but recommended)
-- Credit card (for some services, though free tiers are available)
+- Git installed and configured
+- GitHub repository set up
+- Vercel account (for frontend)
+- Render account (for backend)
+- Node.js and npm (for Vercel CLI)
 
-## 🌐 Quick Deployment (Free)
+## 🔧 Setup Instructions
 
-### Step 1: Prepare Your Repository
+### 1. GitHub Repository Setup
 
-1. **Push to GitHub**
+```bash
+# Initialize git repository (if not already done)
+git init
+git remote add origin https://github.com/yourusername/online-video-enhancer.git
+git branch -M main
+```
+
+### 2. Vercel Setup
+
+1. **Install Vercel CLI:**
    ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   git branch -M main
-   git remote add origin https://github.com/yourusername/online-video-enhancer.git
-   git push -u origin main
+   npm install -g vercel
    ```
 
-### Step 2: Deploy Frontend (Vercel)
-
-1. **Go to [vercel.com](https://vercel.com)**
-2. **Sign up with GitHub**
-3. **Click "New Project"**
-4. **Import your repository**
-5. **Configure settings:**
-   - Framework Preset: Next.js
-   - Root Directory: `frontend`
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-6. **Add Environment Variable:**
-   - Name: `NEXT_PUBLIC_API_URL`
-   - Value: `https://your-backend-url.onrender.com` (we'll get this in step 3)
-7. **Click "Deploy"**
-
-### Step 3: Deploy Backend (Render)
-
-1. **Go to [render.com](https://render.com)**
-2. **Sign up with GitHub**
-3. **Click "New Web Service"**
-4. **Connect your repository**
-5. **Configure settings:**
-   - Name: `video-enhancer-backend`
-   - Root Directory: `backend`
-   - Runtime: Python 3
-   - Build Command: `pip install -r requirements.txt`
-   - Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-6. **Add Environment Variables:**
-   ```
-   CORS_ORIGINS=https://your-frontend-url.vercel.app
-   ```
-7. **Click "Create Web Service"**
-
-### Step 4: Update Frontend API URL
-
-1. **Go back to Vercel dashboard**
-2. **Select your project**
-3. **Go to Settings → Environment Variables**
-4. **Update `NEXT_PUBLIC_API_URL`** with your Render backend URL
-5. **Redeploy the project**
-
-## 🏷️ Custom Domain Setup
-
-### Option 1: Domain with Vercel (Recommended)
-
-1. **Buy a domain** from any provider (Namecheap, GoDaddy, etc.)
-2. **In Vercel dashboard:**
-   - Go to your project → Settings → Domains
-   - Add your domain (e.g., `videoupscaler.com`)
-   - Vercel will show DNS records to configure
-
-3. **Configure DNS at your domain provider:**
-   ```
-   Type: A
-   Name: @
-   Value: 76.76.19.53
-   
-   Type: CNAME
-   Name: www
-   Value: cname.vercel-dns.com
+2. **Login to Vercel:**
+   ```bash
+   vercel login
    ```
 
-4. **Wait for DNS propagation** (can take up to 48 hours)
+3. **Configure Vercel:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Create new project
+   - Connect your GitHub repository
+   - Set root directory to `frontend`
+   - Add environment variable: `NEXT_PUBLIC_API_URL` pointing to your Render backend URL
 
-### Option 2: Subdomain Setup
+### 3. Render Setup
 
-1. **For backend API:**
-   - In Render dashboard → your service → Settings → Custom Domains
-   - Add subdomain: `api.yourdomain.com`
-   - Update DNS records at your domain provider
+1. **Create Render Account:**
+   - Visit [Render.com](https://render.com)
+   - Sign up and create account
 
-2. **Update environment variables:**
-   - Frontend: `NEXT_PUBLIC_API_URL=https://api.yourdomain.com`
-   - Backend: `CORS_ORIGINS=https://yourdomain.com`
+2. **Create Web Service:**
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Set root directory to `backend`
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 
-## 🔧 Advanced Configuration
+3. **Environment Variables:**
+   ```
+   PYTHON_VERSION=3.11.0
+   CORS_ORIGINS=*
+   MAX_FILE_SIZE=100MB
+   ```
 
-### Environment Variables
+## 🚀 Deployment Methods
 
-**Frontend (.env.local):**
-```env
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+### Method 1: Quick Deployment Script
+
+```powershell
+# Run the quick deployment script
+.\quick-deploy.ps1
 ```
 
-**Backend (Render Environment Variables):**
-```env
-CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-MAX_FILE_SIZE=104857600
-LOG_LEVEL=INFO
+This script will:
+- Commit and push changes to GitHub
+- Deploy frontend to Vercel (if CLI is installed)
+- Provide instructions for Render deployment
+
+### Method 2: Comprehensive Deployment Script
+
+```powershell
+# Full deployment with options
+.\deploy.ps1 -CommitMessage "Your commit message" -Force
+
+# Skip specific deployments
+.\deploy.ps1 -SkipVercel -SkipRender
 ```
 
-### SSL/HTTPS
+### Method 3: GitHub Actions (Automatic)
 
-- **Vercel**: Automatic SSL certificates
-- **Render**: Automatic SSL certificates
-- **Custom domains**: SSL is handled automatically
+The `.github/workflows/deploy.yml` file will automatically deploy when you push to the main branch.
 
-## 📊 Monitoring & Analytics
+**Required Secrets:**
+- `VERCEL_TOKEN`: Your Vercel API token
+- `VERCEL_ORG_ID`: Your Vercel organization ID
+- `VERCEL_PROJECT_ID`: Your Vercel project ID
+- `RENDER_WEBHOOK_URL`: Your Render webhook URL
+- `FRONTEND_URL`: Your Vercel frontend URL
+- `BACKEND_URL`: Your Render backend URL
 
-### Add Google Analytics
+## 🔑 Getting API Keys and Tokens
 
-1. **Create Google Analytics account**
-2. **Get tracking ID**
-3. **Add to frontend:**
+### Vercel Token
+1. Go to [Vercel Account Settings](https://vercel.com/account/tokens)
+2. Click "Create Token"
+3. Give it a name and select "Full Account" scope
+4. Copy the token
 
-```javascript
-// In pages/_document.js
-<script async src="https://www.googletagmanager.com/gtag/js?id=GA_TRACKING_ID"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'GA_TRACKING_ID');
-</script>
+### Vercel Project Info
+```bash
+# Get project info
+vercel ls
+# Or check vercel.json in your project
 ```
 
-### Add Error Monitoring
+### Render Webhook
+1. Go to your Render service dashboard
+2. Navigate to "Settings" → "Build & Deploy"
+3. Copy the webhook URL
 
-1. **Sentry** (free tier available)
-2. **LogRocket** (free tier available)
+## 📊 Monitoring Deployments
 
-## 🚀 Performance Optimization
+### Vercel
+- Dashboard: https://vercel.com/dashboard
+- Deployment logs available in real-time
+- Automatic preview deployments for PRs
 
-### Frontend Optimization
+### Render
+- Dashboard: https://dashboard.render.com
+- Build logs and deployment status
+- Health check monitoring
 
-1. **Enable Vercel Analytics**
-2. **Optimize images** with Next.js Image component
-3. **Enable compression** in Vercel settings
+### GitHub Actions
+- Go to your repository → "Actions" tab
+- View workflow runs and logs
+- Set up notifications for deployment status
 
-### Backend Optimization
-
-1. **Add caching headers**
-2. **Implement rate limiting**
-3. **Use CDN for video files**
-
-## 🔒 Security Checklist
-
-- [ ] HTTPS enabled
-- [ ] CORS properly configured
-- [ ] File upload validation
-- [ ] Rate limiting implemented
-- [ ] Environment variables secured
-- [ ] Regular security updates
-
-## 📈 Scaling Considerations
-
-### For High Traffic
-
-1. **Upgrade Render plan** (paid tiers)
-2. **Use CDN** for video storage
-3. **Implement caching**
-4. **Add load balancing**
-
-### Video Storage
-
-For production, consider:
-- **AWS S3** for video storage
-- **CloudFlare** for CDN
-- **Backblaze B2** (cheaper alternative)
-
-## 🆘 Troubleshooting
+## 🛠️ Troubleshooting
 
 ### Common Issues
 
-1. **CORS Errors**
-   - Check CORS_ORIGINS environment variable
-   - Ensure frontend URL is included
+1. **Vercel Build Fails:**
+   - Check Node.js version compatibility
+   - Verify `package.json` and dependencies
+   - Check build logs in Vercel dashboard
 
-2. **File Upload Fails**
-   - Check file size limits
-   - Verify FFmpeg is available on Render
+2. **Render Deployment Fails:**
+   - Verify Python version (3.11+)
+   - Check `requirements.txt` for missing dependencies
+   - Ensure `app.py` is in the correct location
 
-3. **Domain Not Working**
-   - Wait for DNS propagation
-   - Check DNS records are correct
+3. **GitHub Actions Fail:**
+   - Verify all secrets are set correctly
+   - Check workflow file syntax
+   - Ensure repository permissions
 
-### Support Resources
+### Manual Deployment Commands
 
-- **Vercel Docs**: https://vercel.com/docs
-- **Render Docs**: https://render.com/docs
-- **FFmpeg**: https://ffmpeg.org/documentation.html
+```bash
+# Manual Vercel deployment
+cd frontend
+vercel --prod
 
-## 💰 Cost Estimation
+# Manual Render deployment
+# Use Render dashboard or webhook
 
-### Free Tier (Recommended for Starters)
-- **Vercel**: Free (100GB bandwidth/month)
-- **Render**: Free (750 hours/month)
-- **Domain**: ~$10-15/year
+# Check deployment status
+curl https://your-frontend.vercel.app/health
+curl https://your-backend.onrender.com/health
+```
 
-### Paid Tier (For Production)
-- **Vercel Pro**: $20/month
-- **Render**: $7/month
-- **Domain**: ~$10-15/year
-- **Total**: ~$37-42/month
+## 🔄 Continuous Deployment
+
+Once set up, deployments will happen automatically:
+
+1. **Push to main branch** → Triggers GitHub Actions
+2. **GitHub Actions** → Deploys to Vercel and Render
+3. **Health checks** → Verifies deployments are successful
+
+## 📞 Support
+
+- **Vercel Docs:** https://vercel.com/docs
+- **Render Docs:** https://render.com/docs
+- **GitHub Actions Docs:** https://docs.github.com/en/actions
 
 ## 🎯 Next Steps
 
-1. **Deploy using the steps above**
-2. **Test all functionality**
-3. **Set up monitoring**
-4. **Add analytics**
-5. **Optimize performance**
-6. **Plan for scaling**
+After successful deployment:
 
----
-
-**Need help?** Check the troubleshooting section or create an issue in the GitHub repository. 
+1. Test video upload functionality
+2. Verify Real-ESRGAN integration
+3. Monitor performance and logs
+4. Set up monitoring and alerts
+5. Configure custom domains (optional) 

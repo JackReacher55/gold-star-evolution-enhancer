@@ -74,20 +74,25 @@ export default function Home() {
           return prev + 10;
         });
       }, 500);
+      
       const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
       });
+      
       if (!res.ok) {
-        throw new Error('Upload failed');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Upload failed with status ${res.status}`);
       }
+      
       const data = await res.json();
       setProgress(100);
       setDownloadUrl(data.download_url);
       setAudioAnalysis(data.analysis);
+      setAlert(`Success! Video upscaled to ${data.resolution} with ${data.scale}x enhancement.`);
       clearInterval(progressInterval);
     } catch (error) {
-      setAlert('Error uploading video. Please try again.');
+      setAlert(`Error uploading video: ${error.message}. Please try again.`);
       console.error('Upload error:', error);
     } finally {
       setUploading(false);
@@ -106,14 +111,18 @@ export default function Home() {
         method: 'POST',
         body: formData,
       });
+      
       if (!res.ok) {
-        throw new Error('Audio analysis failed');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Audio analysis failed with status ${res.status}`);
       }
+      
       const data = await res.json();
       setAudioAnalysis(data.analysis);
-      setAlert('Audio analysis complete!');
+      setAudioFixUrl(data.download_url);
+      setAlert('Audio analysis complete! Enhanced video with audio fixes available for download.');
     } catch (error) {
-      setAlert('Error analyzing audio. Please try again.');
+      setAlert(`Error analyzing audio: ${error.message}. Please try again.`);
       console.error('Audio analysis error:', error);
     } finally {
       setAnalyzingAudio(false);
@@ -205,6 +214,19 @@ export default function Home() {
                 className="block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded text-center mt-2"
               >
                 Download Enhanced Video
+              </a>
+            </div>
+          )}
+          {/* Audio Fix Download Link */}
+          {audioFixUrl && (
+            <div className="w-full max-w-md mt-4">
+              <a
+                href={audioFixUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded text-center mt-2"
+              >
+                Download Audio-Fixed Video
               </a>
             </div>
           )}

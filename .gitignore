@@ -119,3 +119,6 @@ videos/
 # Temporary files
 *.tmp
 *.temp 
+backend/.env
+
+frontend/.env.local
