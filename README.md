@@ -284,3 +284,22 @@ If you encounter any issues:
 =======
 # gold-star-evolution-enhancer
 >>>>>>> bc6d7467c1845aba7586eb7e124d6a06097c0d2c
+
+## Automated Deployment Instructions
+
+### Frontend (Vercel)
+1. Copy `frontend/env.example` to `frontend/.env` and set:
+   ```
+   NEXT_PUBLIC_API_URL=https://gold-star-evolution-enhancer-backend.onrender.com
+   ```
+2. Push changes to GitHub. Vercel will auto-deploy.
+
+### Backend (Render)
+1. In the Render dashboard, set the environment variable:
+   ```
+   CORS_ORIGINS=https://gold-star-evolution-enhancer.vercel.app
+   ```
+2. Push changes to GitHub. Render will auto-deploy.
+
+### Testing
+- Visit https://gold-star-evolution-enhancer.vercel.app and verify video upload and processing works end-to-end.
