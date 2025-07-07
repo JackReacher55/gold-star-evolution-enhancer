@@ -7,6 +7,7 @@ import ffmpeg
 from fastapi.staticfiles import StaticFiles
 from typing import Optional
 import logging
+from video_processing import upscale_with_realesrgan
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -54,39 +55,6 @@ def analyze_video(input_path: str) -> dict:
         logger.error(f"Error analyzing video: {e}")
         return {"error": str(e)}
 
-def upscale_video(input_path: str, output_path: str, resolution: str = "1920:1080") -> bool:
-    """Upscale video to specified resolution"""
-    try:
-        # Parse resolution
-        width, height = map(int, resolution.split(':'))
-        
-        # Enhanced FFmpeg command with better quality settings
-        cmd = [
-            "ffmpeg",
-            "-i", input_path,
-            "-vf", f"scale={width}:{height}:flags=lanczos",  # Use Lanczos scaling for better quality
-            "-c:v", "libx264",
-            "-preset", "medium",  # Better quality than 'fast'
-            "-crf", "18",  # High quality (lower = better quality)
-            "-c:a", "aac",
-            "-b:a", "128k",  # Audio bitrate
-            "-movflags", "+faststart",  # Optimize for web streaming
-            "-y",  # Overwrite output file
-            output_path
-        ]
-        
-        logger.info(f"Running FFmpeg command: {' '.join(cmd)}")
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            logger.error(f"FFmpeg error: {result.stderr}")
-            return False
-            
-        return True
-    except Exception as e:
-        logger.error(f"Error upscaling video: {e}")
-        return False
-
 # Helper to get base URL for download links
 def get_base_url(request: Request) -> str:
     return str(request.base_url).rstrip('/')
@@ -102,20 +70,20 @@ def get_temp_dir() -> str:
 async def upscale_video_endpoint(
     request: Request,
     file: UploadFile = File(...),
-    resolution: str = Form("1920:1080")
+    resolution: str = Form("2")  # Real-ESRGAN scale (e.g., 2, 4)
 ):
-    """Upload and upscale video to specified resolution"""
+    """Upload and upscale video to specified resolution using Real-ESRGAN"""
     # Validate file type
     if not file.content_type.startswith('video/'):
         raise HTTPException(status_code=400, detail="File must be a video")
 
-    # Validate resolution format
+    # Validate scale (should be 2, 4, etc.)
     try:
-        width, height = map(int, resolution.split(':'))
-        if width <= 0 or height <= 0:
-            raise ValueError("Invalid resolution")
+        scale = int(resolution)
+        if scale not in [2, 4]:
+            raise ValueError("Invalid scale")
     except:
-        raise HTTPException(status_code=400, detail="Invalid resolution format. Use WIDTH:HEIGHT")
+        raise HTTPException(status_code=400, detail="Invalid scale. Use 2 or 4.")
 
     uid = str(uuid.uuid4())
     temp_dir = get_temp_dir()
@@ -123,21 +91,28 @@ async def upscale_video_endpoint(
     output_path = os.path.join(temp_dir, f"{uid}_upscaled.mp4")
 
     try:
-        # Save uploaded file and check size
-        content = await file.read()
-        if len(content) > 100 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="File size must be less than 100MB")
+        # Save uploaded file and check size (optimized for memory)
+        total_size = 0
         with open(input_path, "wb") as f:
-            f.write(content)
+            while True:
+                chunk = await file.read(1024 * 1024)  # 1MB chunks
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > 100 * 1024 * 1024:
+                    f.close()
+                    os.remove(input_path)
+                    raise HTTPException(status_code=400, detail="File size must be less than 100MB")
+                f.write(chunk)
 
         logger.info(f"Saved uploaded file to {input_path}")
         # Analyze video
         analysis = analyze_video(input_path)
         logger.info(f"Video analysis: {analysis}")
-        # Upscale video
-        success = upscale_video(input_path, output_path, resolution)
+        # Upscale video using Real-ESRGAN
+        success = upscale_with_realesrgan(input_path, output_path, str(scale))
         if not success:
-            raise HTTPException(status_code=500, detail="Failed to process video")
+            raise HTTPException(status_code=500, detail="Failed to process video with Real-ESRGAN")
         # Clean up input file
         if os.path.exists(input_path):
             os.remove(input_path)
@@ -147,7 +122,7 @@ async def upscale_video_endpoint(
         return {
             "download_url": download_url,
             "analysis": analysis,
-            "resolution": resolution,
+            "resolution": f"{scale}x",
             "file_id": uid
         }
     except HTTPException as he:
@@ -173,11 +148,19 @@ async def fix_audio_endpoint(request: Request, file: UploadFile = File(...)):
     input_path = os.path.join(temp_dir, f"{uid}_{file.filename}")
     output_path = os.path.join(temp_dir, f"{uid}_audiofixed.mp4")
     try:
-        content = await file.read()
-        if len(content) > 100 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="File size must be less than 100MB")
+        # Save uploaded file and check size (optimized for memory)
+        total_size = 0
         with open(input_path, "wb") as f:
-            f.write(content)
+            while True:
+                chunk = await file.read(1024 * 1024)  # 1MB chunks
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > 100 * 1024 * 1024:
+                    f.close()
+                    os.remove(input_path)
+                    raise HTTPException(status_code=400, detail="File size must be less than 100MB")
+                f.write(chunk)
         logger.info(f"Saved uploaded file to {input_path}")
         analysis = analyze_video(input_path)
         logger.info(f"Video analysis: {analysis}")
@@ -242,3 +225,8 @@ async def root():
             "Fast processing with advanced algorithms"
         ]
     } 
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port) 
