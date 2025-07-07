@@ -5,6 +5,10 @@ services:
     plan: starter
     region: oregon
     buildCommand: |
+      apt-get update && apt-get install -y wget unzip ffmpeg
+      wget -O /tmp/realesrgan.zip https://github.com/nihui/realesrgan-ncnn-vulkan/releases/download/20220424/realesrgan-ncnn-vulkan-20220424-ubuntu.zip
+      unzip /tmp/realesrgan.zip -d /usr/local/bin/
+      chmod +x /usr/local/bin/realesrgan-ncnn-vulkan
       pip install -r backend/requirements.txt
     startCommand: |
       cd backend && uvicorn app:app --host 0.0.0.0 --port $PORT
@@ -20,7 +24,7 @@ services:
       - key: FFMPEG_PATH
         value: "/usr/bin/ffmpeg"
       - key: REALESRGAN_PATH
-        value: "/usr/local/bin/realesrgan"
+        value: "/usr/local/bin/realesrgan-ncnn-vulkan"
     healthCheckPath: /health
     autoDeploy: true
     branch: main

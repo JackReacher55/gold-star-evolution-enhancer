@@ -5,11 +5,7 @@ ffmpeg-python==0.2.0
 pydantic==2.11.7
 python-dotenv==1.0.0
 requests==2.31.0
-# Real-ESRGAN dependencies (optional, for Python wrapper)
-realesrgan==1.0.0
 opencv-python==4.8.1.78
-# torch (uncomment if using Python Real-ESRGAN, not ncnn-vulkan)
-# torch==2.0.1
-# Additional production dependencies
 aiofiles==23.2.1
-python-json-logger==2.0.7 
+python-json-logger==2.0.7
+# realesrgan==1.0.0 
