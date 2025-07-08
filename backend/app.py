@@ -18,7 +18,7 @@ app = FastAPI(title="Gold Star Evolution Enhancer API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Or ["http://localhost:3000"] for more security
-    allow_credentials=True,
+    allow_credentials=False,  # Must be False when allow_origins is ["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
