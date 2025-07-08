@@ -150,10 +150,7 @@ async def upscale_video_endpoint(
                 os.remove(path)
         raise
     except Exception as e:
-        for path in [input_path, output_path]:
-            if os.path.exists(path):
-                os.remove(path)
-        logger.error(f"Error processing video: {e}", exc_info=True)
+        logger.error(f"Error in /upload: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/fix-audio")
@@ -224,25 +221,8 @@ async def health_check():
     return {"status": "healthy", "service": "gold-star-evolution-enhancer"}
 
 @app.get("/")
-async def root():
-    """Root endpoint with API information"""
-    return {
-        "message": "Gold Star Evolution Enhancer API",
-        "version": "1.0.0",
-        "description": "Professional AI-powered video enhancement service",
-        "endpoints": {
-            "upload": "POST /upload - Upload and upscale video",
-            "fix_audio": "POST /fix-audio - Fix video audio",
-            "health": "GET /health - Health check"
-        },
-        "features": [
-            "AI-powered video upscaling",
-            "Multiple resolution support (720p, 1080p, 2K, 4K)",
-            "Audio analysis and fixing",
-            "Professional quality output",
-            "Fast processing with advanced algorithms"
-        ]
-    } 
+def root():
+    return {"message": "Gold Star Evolution Enhancer backend is running."}
 
 if __name__ == "__main__":
     import uvicorn
