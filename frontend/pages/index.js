@@ -78,6 +78,8 @@ export default function Home() {
       const res = await fetch(`${API_BASE_URL}/upload`, {
         method: 'POST',
         body: formData,
+        mode: 'cors',
+        credentials: 'omit',
       });
       
       if (!res.ok) {
@@ -110,6 +112,8 @@ export default function Home() {
       const res = await fetch(`${API_BASE_URL}/fix-audio`, {
         method: 'POST',
         body: formData,
+        mode: 'cors',
+        credentials: 'omit',
       });
       
       if (!res.ok) {
