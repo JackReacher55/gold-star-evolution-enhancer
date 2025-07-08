@@ -303,3 +303,26 @@ If you encounter any issues:
 
 ### Testing
 - Visit https://gold-star-evolution-enhancer.vercel.app and verify video upload and processing works end-to-end.
+
+## 🚀 GitHub Actions CI/CD Automation
+
+This project uses GitHub Actions for continuous integration and deployment (CI/CD). On every push to the `main` branch, the following happens automatically:
+
+- **Frontend** is deployed to Vercel using the Vercel CLI.
+- **Backend** is deployed to Render using a webhook.
+- **Health checks** are performed on both frontend and backend after deployment.
+
+### Required GitHub Secrets
+- `VERCEL_TOKEN`: Your Vercel API token
+- `VERCEL_ORG_ID`: Your Vercel organization ID
+- `VERCEL_PROJECT_ID`: Your Vercel project ID
+- `RENDER_WEBHOOK_URL`: Your Render deploy webhook URL
+- `FRONTEND_URL`: Your deployed frontend URL (for health check)
+- `BACKEND_URL`: Your deployed backend URL (for health check)
+
+### How to Trigger Deployments
+- Push any commit to the `main` branch.
+- The workflow in `.github/workflows/deploy.yml` will run automatically.
+- Monitor deployment status in the GitHub Actions tab.
+
+See `.github/workflows/deploy.yml` for full details.
