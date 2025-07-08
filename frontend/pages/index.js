@@ -8,12 +8,9 @@ export default function Home() {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState('');
-  const [audioAnalysis, setAudioAnalysis] = useState(null);
-  const [audioFixUrl, setAudioFixUrl] = useState('');
   const [alert, setAlert] = useState('');
   const [selectedResolution, setSelectedResolution] = useState('1920:1080');
   const [videoPreview, setVideoPreview] = useState('');
-  const [analyzingAudio, setAnalyzingAudio] = useState(false);
   const fileInputRef = useRef(null);
 
   const resolutions = [
@@ -28,8 +25,6 @@ export default function Home() {
     if (selectedFile) {
       setFile(selectedFile);
       setDownloadUrl('');
-      setAudioAnalysis(null);
-      setAudioFixUrl('');
       setAlert('');
       setProgress(0);
       const url = URL.createObjectURL(selectedFile);
@@ -43,8 +38,6 @@ export default function Home() {
     if (droppedFile && droppedFile.type.startsWith('video/')) {
       setFile(droppedFile);
       setDownloadUrl('');
-      setAudioAnalysis(null);
-      setAudioFixUrl('');
       setAlert('');
       setProgress(0);
       const url = URL.createObjectURL(droppedFile);
@@ -90,7 +83,6 @@ export default function Home() {
       const data = await res.json();
       setProgress(100);
       setDownloadUrl(data.download_url);
-      setAudioAnalysis(data.analysis);
       setAlert(`Success! Video upscaled to ${data.resolution} with ${data.scale}x enhancement.`);
       clearInterval(progressInterval);
     } catch (error) {
@@ -98,38 +90,6 @@ export default function Home() {
       console.error('Upload error:', error);
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleAnalyzeAudio = async () => {
-    if (!file) return;
-    setAnalyzingAudio(true);
-    setAlert('');
-    setAudioAnalysis(null);
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const res = await fetch(`${API_BASE_URL}/fix-audio`, {
-        method: 'POST',
-        body: formData,
-        mode: 'cors',
-        credentials: 'omit',
-      });
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Audio analysis failed with status ${res.status}`);
-      }
-      
-      const data = await res.json();
-      setAudioAnalysis(data.analysis);
-      setAudioFixUrl(data.download_url);
-      setAlert('Audio analysis complete! Enhanced video with audio fixes available for download.');
-    } catch (error) {
-      setAlert(`Error analyzing audio: ${error.message}. Please try again.`);
-      console.error('Audio analysis error:', error);
-    } finally {
-      setAnalyzingAudio(false);
     }
   };
 
@@ -188,13 +148,6 @@ export default function Home() {
             >
               {uploading ? 'Processing...' : 'Upload & Convert'}
             </button>
-            <button
-              onClick={handleAnalyzeAudio}
-              disabled={analyzingAudio || !file}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
-            >
-              {analyzingAudio ? 'Analyzing Audio...' : 'Analyze Audio'}
-            </button>
           </div>
           {/* Progress Bar */}
           {uploading && (
@@ -221,31 +174,6 @@ export default function Home() {
               </a>
             </div>
           )}
-          {/* Audio Fix Download Link */}
-          {audioFixUrl && (
-            <div className="w-full max-w-md mt-4">
-              <a
-                href={audioFixUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded text-center mt-2"
-              >
-                Download Audio-Fixed Video
-              </a>
-            </div>
-          )}
-          {/* Audio Analysis Result */}
-          {audioAnalysis && (
-            <div className="w-full max-w-md mt-4 bg-gray-800 rounded p-4 border border-blue-500">
-              <div className="font-semibold text-blue-300 mb-2">Audio Analysis</div>
-              <div className="text-sm text-gray-200">
-                <p><strong>Has Audio:</strong> {audioAnalysis.has_audio ? 'Yes' : 'No'}</p>
-                {audioAnalysis.audio_codec && (
-                  <p><strong>Audio Codec:</strong> {audioAnalysis.audio_codec}</p>
-                )}
-              </div>
-            </div>
-          )}
           {/* Alert Messages */}
           {alert && (
             <div className="w-full max-w-md mt-4 bg-red-800 rounded p-4 border border-red-500">
@@ -258,7 +186,7 @@ export default function Home() {
           <div className="bg-gray-800 rounded-xl shadow-lg p-8 w-full max-w-md flex flex-col gap-4">
             <div className="text-2xl font-bold mb-2 text-white">What's Gold Star Evolution Enhancer?</div>
             <div className="text-gray-300 mb-4">
-              Our AI algorithm, trained by a large amount of data, can losslessly enlarge and restore the details of all kinds of blurred and unclear videos.
+              Gold Star Evolution Enhancer uses advanced AI and state-of-the-art upscaling technology to transform your videos. Enjoy sharper, clearer, and more vibrant visuals with just a single upload. Fast, secure, and privacy-focused.
             </div>
             <div className="text-lg font-semibold text-white mb-2">Privacy and security</div>
             <div className="text-gray-400 mb-4">
